@@ -88,7 +88,7 @@ flowchart TD
 
 ## 六、可交互原型
 
-在线预览：[点击查看可交互原型]（待部署后更新链接）
+在线预览：[点击查看可交互原型](https://yping-98.github.io/month-goal-group-view/%E6%9C%88%E5%BA%A6%E7%9B%AE%E6%A0%87%E6%8C%89%E7%BB%84%E5%B1%95%E7%A4%BA-%E4%BA%A4%E4%BA%92%E5%8E%9F%E5%9E%8B.html)
 
 > 原型为可交互 HTML 页面，点击链接即可在浏览器中体验完整交互流程。
 
