@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月度目标配置 - 按小组展示（交互原型）</title>
+<style>
+:root {
+    --sidebar-bg: #001529;
+    --sidebar-width: 220px;
+    --primary-blue: #1890ff;
+    --bg-gray: #f0f2f5;
+    --header-height: 50px;
+    --success: #52c41a;
+    --warning: #faad14;
+    --danger: #ff4d4f;
+    --border-color: #e8e8e8;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-light: #999;
+    --white: #fff;
+    --group-header-bg: #fafafa;
+    --group-hover-bg: #f0f7ff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg-gray);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+.sidebar-logo {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
+}
+
+.sidebar-menu { padding: 8px 0; }
+
+.menu-item {
+    padding: 10px 16px 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    user-select: none;
+}
+.menu-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.menu-item.active { background: var(--primary-blue); color: #fff; }
+
+.menu-item .arrow {
+    margin-left: auto;
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+.menu-item .arrow.open { transform: rotate(90deg); }
+
+.submenu {
+    display: none;
+    background: rgba(0,0,0,0.15);
+}
+.submenu.open { display: block; }
+
+.submenu .menu-item {
+    padding-left: 48px;
+    font-size: 12px;
+}
+
+.main-area {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-header {
+    height: var(--header-height);
+    background: var(--white);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.breadcrumb {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.breadcrumb span { color: var(--text-primary); font-weight: 500; }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+}
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.page-content {
+    padding: 20px 24px;
+    flex: 1;
+}
+
+.page-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+.page-tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+.page-tab:hover { color: var(--primary-blue); }
+.page-tab.active {
+    color: var(--primary-blue);
+    border-bottom-color: var(--primary-blue);
+    font-weight: 500;
+}
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.filter-item label {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-size: 13px;
+}
+.filter-item input, .filter-item select {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.filter-item input:focus, .filter-item select:focus {
+    border-color: var(--primary-blue);
+}
+
+.team-summary-bar {
+    background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+    border: 1px solid #91d5ff;
+    border-radius: 8px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.team-summary-bar .summary-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.summary-item .label {
+    font-size: 12px;
+    color: var(--text-light);
+}
+.summary-item .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-blue);
+}
+.summary-item .value.total {
+    font-size: 26px;
+    color: #1765ad;
+}
+.summary-item .unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 2px;
+}
+
+.content-card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+
+.group-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.group-header-row {
+    background: var(--group-header-bg);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+.group-header-row:hover {
+    background: var(--group-hover-bg);
+}
+
+.group-header-row td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+}
+
+.group-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    font-size: 10px;
+    color: var(--text-light);
+    transition: transform 0.2s;
+}
+.group-toggle.expanded { transform: rotate(90deg); }
+
+.group-name {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.group-count {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-left: 8px;
+    font-weight: 400;
+}
+
+.group-total-cell {
+    text-align: right;
+    color: var(--primary-blue);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.member-row {
+    display: none;
+}
+.member-row.visible {
+    display: table-row;
+}
+.member-row td {
+    padding: 10px 16px 10px 52px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+.member-row td:first-child {
+    color: var(--text-primary);
+}
+.member-row td:last-child {
+    text-align: right;
+    padding-right: 16px;
+}
+
+.goal-input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.goal-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--white);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.goal-btn:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+.goal-input {
+    width: 120px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-align: center;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.goal-input:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px rgba(24,144,255,0.1);
+}
+.goal-unit {
+    color: var(--text-light);
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.table-header {
+    background: var(--group-header-bg);
+}
+.table-header th {
+    padding: 12px 16px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+.table-header th:last-child {
+    text-align: right;
+}
+
+.bottom-bar {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid var(--border-color);
+    background: var(--white);
+}
+
+.btn {
+    padding: 8px 24px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: var(--white);
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+.btn:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+.btn-primary {
+    background: var(--primary-blue);
+    color: var(--white);
+    border-color: var(--primary-blue);
+}
+.btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: var(--white); }
+.btn-primary.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--white);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+    pointer-events: none;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.toast-icon { font-size: 18px; }
+.toast-icon.success { color: var(--success); }
+.toast-icon.error { color: var(--danger); }
+
+.expand-all-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+.expand-all-btn {
+    font-size: 12px;
+    color: var(--primary-blue);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+}
+.expand-all-btn:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main-area { margin-left: 0; }
+    .team-summary-bar { flex-direction: column; gap: 12px; }
+    .team-summary-bar .summary-left { flex-wrap: wrap; gap: 16px; }
+    .goal-input { width: 80px; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+    <span class="toast-icon success" id="toastIcon">&#10004;</span>
+    <span id="toastText">保存成功</span>
+</div>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">体验营</div>
+        <nav class="sidebar-menu">
+            <div class="menu-item">&#128100; 客户管理</div>
+            <div class="menu-item">&#128257; 转介绍跟进</div>
+            <div class="menu-item">&#128270; 线索查询</div>
+            <div class="menu-item">&#128279; 专属售卖链接</div>
+            <div class="menu-item">&#128197; 非服务期客户</div>
+            <div class="menu-item" onclick="toggleSubmenu('ops')">
+                &#9881; 运营工具 <span class="arrow" id="arrow-ops">&#9654;</span>
+            </div>
+            <div class="submenu" id="sub-ops">
+                <div class="menu-item">订单管理</div>
+            </div>
+            <div class="menu-item" onclick="toggleSubmenu('data')">
+                &#128202; 数据统计 <span class="arrow" id="arrow-data">&#9654;</span>
+            </div>
+            <div class="submenu" id="sub-data">
+                <div class="menu-item">企微数据</div>
+            </div>
+            <div class="menu-item" onclick="toggleSubmenu('seat')">
+                &#128101; 坐席管理 <span class="arrow" id="arrow-seat">&#9654;</span>
+            </div>
+            <div class="submenu" id="sub-seat">
+                <div class="menu-item">架构管理</div>
+            </div>
+            <div class="menu-item" onclick="toggleSubmenu('config')">
+                &#9881; 配置 <span class="arrow open" id="arrow-config">&#9654;</span>
+            </div>
+            <div class="submenu open" id="sub-config">
+                <div class="menu-item">配置投放渠道信息</div>
+                <div class="menu-item">线索投放计划</div>
+                <div class="menu-item active">月度目标配置</div>
+                <div class="menu-item">月度线索目标配置</div>
+                <div class="menu-item">线索分配设置</div>
+            </div>
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="top-header">
+            <div class="breadcrumb">配置 / <span>月度目标配置</span></div>
+            <div class="user-info">
+                <div class="user-avatar">李</div>
+                <span>李莹萍</span>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-tabs">
+                <div class="page-tab active">客户管理</div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item">
+                    <label>选择年月：</label>
+                    <input type="month" id="monthPicker" value="2026-03" onchange="onMonthChange()">
+                </div>
+            </div>
+
+            <div class="team-summary-bar">
+                <div class="summary-left">
+                    <div class="summary-item">
+                        <span class="label">团队目标总计</span>
+                        <span class="value total" id="teamTotal">0<span class="unit">元</span></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">小组数量</span>
+                        <span class="value" id="groupCount">0<span class="unit">个</span></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">在职人数</span>
+                        <span class="value" id="memberCount">0<span class="unit">人</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="expand-all-bar">
+                    <button class="expand-all-btn" onclick="expandAll()">全部展开</button>
+                    <button class="expand-all-btn" onclick="collapseAll()">全部收起</button>
+                </div>
+                <table class="group-table">
+                    <thead class="table-header">
+                        <tr>
+                            <th style="width:40%">小组 / 成员</th>
+                            <th style="width:15%">在职人数</th>
+                            <th style="width:45%; text-align:right">目标（元）</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groupTableBody">
+                    </tbody>
+                </table>
+                <div class="bottom-bar">
+                    <button class="btn" onclick="window.location.reload()">重置</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="handleSave()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const groupsData = {
+    "一组-遥遥领先": [
+        { name: "兰正红", goal: 48000 },
+        { name: "牟为民", goal: 0 },
+        { name: "陈文栋", goal: 0 },
+        { name: "孙婧雪", goal: 0 },
+        { name: "胡明珠", goal: 0 },
+        { name: "周贯磊", goal: 0 },
+        { name: "兰英英", goal: 0 },
+        { name: "夏冰", goal: 0 },
+        { name: "陈斯武", goal: 80000 },
+        { name: "郑国庆", goal: 0 },
+        { name: "阮长峰", goal: 80000 },
+        { name: "罗宇环", goal: 80000 },
+        { name: "邹建伟", goal: 0 },
+        { name: "熊逸凡", goal: 80000 },
+        { name: "袁俊丽", goal: 80000 }
+    ],
+    "二组-李高俊子": [
+        { name: "陈豪", goal: 0 },
+        { name: "周义柠", goal: 64000 },
+        { name: "石满意", goal: 0 },
+        { name: "朱叶帅", goal: 80000 },
+        { name: "綦玲", goal: 80000 },
+        { name: "张文杨", goal: 0 },
+        { name: "胡男华", goal: 0 },
+        { name: "文婧", goal: 64000 },
+        { name: "陈思源", goal: 0 },
+        { name: "汤晓军", goal: 80000 },
+        { name: "杜俊锋", goal: 0 },
+        { name: "代艳", goal: 80000 },
+        { name: "吴帆", goal: 80000 },
+        { name: "龚刘明清", goal: 0 },
+        { name: "付祖发", goal: 80000 },
+        { name: "李高俊子", goal: 0 }
+    ],
+    "三组-冯志辉（考核）": [
+        { name: "冯志辉", goal: 0 },
+        { name: "吴其权", goal: 0 },
+        { name: "叶玉珠", goal: 0 },
+        { name: "涂婵", goal: 80000 },
+        { name: "袁坤", goal: 80000 },
+        { name: "刘莹", goal: 80000 },
+        { name: "刘庆一", goal: 80000 },
+        { name: "吴艳裘", goal: 0 },
+        { name: "林涛", goal: 80000 },
+        { name: "李文浩", goal: 80000 },
+        { name: "熊志超", goal: 0 }
+    ],
+    "四组-杨佐恒": [
+        { name: "刘文龙", goal: 48000 },
+        { name: "罗冰钰", goal: 0 },
+        { name: "何双", goal: 0 },
+        { name: "张梦璇", goal: 0 },
+        { name: "胡光辉", goal: 0 },
+        { name: "朱强", goal: 80000 },
+        { name: "杨晓慧", goal: 80000 },
+        { name: "朱碧蓝", goal: 80000 },
+        { name: "王闯", goal: 0 },
+        { name: "袁怀登", goal: 80000 },
+        { name: "盛红兵", goal: 80000 },
+        { name: "谢雪芹", goal: 80000 },
+        { name: "李丹凤", goal: 0 },
+        { name: "顾双双", goal: 80000 },
+        { name: "杨佐恒", goal: 0 },
+        { name: "朱巧会", goal: 80000 },
+        { name: "罗智明", goal: 80000 },
+        { name: "易杰", goal: 80000 },
+        { name: "范飞宇", goal: 0 },
+        { name: "朱传念", goal: 0 }
+    ],
+    "五组-姚世帆": [
+        { name: "李永辉", goal: 0 },
+        { name: "刘凯", goal: 64000 },
+        { name: "吴昶俊", goal: 0 },
+        { name: "孙蜀", goal: 64000 },
+        { name: "袁宇科", goal: 64000 },
+        { name: "潘辰", goal: 64000 },
+        { name: "高友艳", goal: 64000 },
+        { name: "姚世帆", goal: 0 },
+        { name: "李欢", goal: 0 }
+    ],
+    "AI定时开课测试小组": [
+        { name: "洪涛", goal: 0 },
+        { name: "杨艳飞", goal: 0 },
+        { name: "涂思静", goal: 0 },
+        { name: "苏袁萍", goal: 0 },
+        { name: "李敏", goal: 0 },
+        { name: "夏蕾", goal: 0 }
+    ],
+    "长沙测试": [
+        { name: "徐啸林", goal: 0 },
+        { name: "廖彬", goal: 0 },
+        { name: "罗光润", goal: 0 },
+        { name: "李添", goal: 0 },
+        { name: "高凤伟", goal: 0 },
+        { name: "李伟", goal: 0 },
+        { name: "王澎江", goal: 0 },
+        { name: "余彦", goal: 0 },
+        { name: "邓英杰", goal: 0 },
+        { name: "王会晴", goal: 0 },
+        { name: "彭罗奇", goal: 0 },
+        { name: "孙悦", goal: 0 },
+        { name: "谭礼清", goal: 0 }
+    ],
+    "新兵营": [
+        { name: "金莹", goal: 0 },
+        { name: "黄冬阳", goal: 0 },
+        { name: "李刚路", goal: 0 },
+        { name: "施磊", goal: 0 },
+        { name: "熊梦迪", goal: 0 },
+        { name: "程梓鑫", goal: 0 },
+        { name: "盛雯", goal: 0 },
+        { name: "左攀", goal: 0 },
+        { name: "杨雪", goal: 0 },
+        { name: "刘珊", goal: 0 },
+        { name: "张心如", goal: 0 },
+        { name: "鲁紫曦", goal: 0 },
+        { name: "秦梓阔", goal: 0 },
+        { name: "黄莎", goal: 0 },
+        { name: "崔迪", goal: 0 },
+        { name: "沈进宝", goal: 0 },
+        { name: "孙泽鹏", goal: 0 },
+        { name: "魏长俊", goal: 0 },
+        { name: "刘金豪", goal: 0 },
+        { name: "余露", goal: 0 }
+    ],
+    "电销测试": [
+        { name: "肖振", goal: 0 },
+        { name: "曹原", goal: 0 },
+        { name: "石斐", goal: 0 },
+        { name: "方聪", goal: 0 },
+        { name: "赖永", goal: 0 },
+        { name: "杨帆", goal: 0 },
+        { name: "蒋攀", goal: 0 },
+        { name: "焦莹莹", goal: 0 },
+        { name: "丁燕", goal: 0 },
+        { name: "闫金洋", goal: 0 },
+        { name: "张鹏", goal: 0 },
+        { name: "汪林文", goal: 0 }
+    ]
+};
+
+const expandedGroups = new Set();
+
+function toggleSubmenu(id) {
+    const sub = document.getElementById('sub-' + id);
+    const arrow = document.getElementById('arrow-' + id);
+    sub.classList.toggle('open');
+    arrow.classList.toggle('open');
+}
+
+function renderTable() {
+    const tbody = document.getElementById('groupTableBody');
+    tbody.innerHTML = '';
+    let teamTotal = 0;
+    let totalMembers = 0;
+    const groupNames = Object.keys(groupsData);
+
+    groupNames.forEach(groupName => {
+        const members = groupsData[groupName];
+        const groupTotal = members.reduce((sum, m) => sum + (m.goal || 0), 0);
+        teamTotal += groupTotal;
+        totalMembers += members.length;
+        const isExpanded = expandedGroups.has(groupName);
+
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'group-header-row';
+        headerRow.onclick = () => toggleGroup(groupName);
+        headerRow.innerHTML = `
+            <td>
+                <span class="group-toggle ${isExpanded ? 'expanded' : ''}">&#9654;</span>
+                <span class="group-name">${groupName}</span>
+                <span class="group-count">${members.length} 人</span>
+            </td>
+            <td>${members.length} 人</td>
+            <td class="group-total-cell">${groupTotal.toLocaleString()} 元</td>
+        `;
+        tbody.appendChild(headerRow);
+
+        members.forEach((member, idx) => {
+            const memberRow = document.createElement('tr');
+            memberRow.className = 'member-row' + (isExpanded ? ' visible' : '');
+            memberRow.setAttribute('data-group', groupName);
+            memberRow.innerHTML = `
+                <td>${member.name}</td>
+                <td></td>
+                <td>
+                    <div class="goal-input-wrapper">
+                        <button class="goal-btn" onclick="event.stopPropagation(); adjustGoal('${groupName}', ${idx}, -1000)">-</button>
+                        <input type="number" class="goal-input" value="${member.goal}" min="0"
+                            onchange="updateGoal('${groupName}', ${idx}, this.value)"
+                            oninput="updateGoal('${groupName}', ${idx}, this.value)"
+                            onclick="event.stopPropagation()">
+                        <button class="goal-btn" onclick="event.stopPropagation(); adjustGoal('${groupName}', ${idx}, 1000)">+</button>
+                        <span class="goal-unit">元</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(memberRow);
+        });
+    });
+
+    document.getElementById('teamTotal').innerHTML = teamTotal.toLocaleString() + '<span class="unit">元</span>';
+    document.getElementById('groupCount').innerHTML = groupNames.length + '<span class="unit">个</span>';
+    document.getElementById('memberCount').innerHTML = totalMembers + '<span class="unit">人</span>';
+}
+
+function toggleGroup(groupName) {
+    if (expandedGroups.has(groupName)) {
+        expandedGroups.delete(groupName);
+    } else {
+        expandedGroups.add(groupName);
+    }
+    renderTable();
+}
+
+function expandAll() {
+    Object.keys(groupsData).forEach(g => expandedGroups.add(g));
+    renderTable();
+}
+
+function collapseAll() {
+    expandedGroups.clear();
+    renderTable();
+}
+
+function updateGoal(groupName, idx, value) {
+    const num = Math.max(0, parseInt(value) || 0);
+    groupsData[groupName][idx].goal = num;
+    updateSummaries();
+}
+
+function adjustGoal(groupName, idx, delta) {
+    const current = groupsData[groupName][idx].goal || 0;
+    groupsData[groupName][idx].goal = Math.max(0, current + delta);
+    renderTable();
+    const rows = document.querySelectorAll(`tr.member-row[data-group="${groupName}"]`);
+    if (rows[idx]) {
+        const input = rows[idx].querySelector('.goal-input');
+        if (input) input.focus();
+    }
+}
+
+function updateSummaries() {
+    let teamTotal = 0;
+    const tbody = document.getElementById('groupTableBody');
+    const rows = tbody.querySelectorAll('tr');
+
+    Object.keys(groupsData).forEach(groupName => {
+        const members = groupsData[groupName];
+        const groupTotal = members.reduce((sum, m) => sum + (m.goal || 0), 0);
+        teamTotal += groupTotal;
+    });
+
+    document.getElementById('teamTotal').innerHTML = teamTotal.toLocaleString() + '<span class="unit">元</span>';
+
+    let currentGroup = null;
+    rows.forEach(row => {
+        if (row.classList.contains('group-header-row')) {
+            const nameEl = row.querySelector('.group-name');
+            if (nameEl) {
+                currentGroup = nameEl.textContent;
+                const totalCell = row.querySelector('.group-total-cell');
+                const members = groupsData[currentGroup];
+                if (members && totalCell) {
+                    const gt = members.reduce((sum, m) => sum + (m.goal || 0), 0);
+                    totalCell.textContent = gt.toLocaleString() + ' 元';
+                }
+            }
+        }
+    });
+}
+
+function handleSave() {
+    const btn = document.getElementById('saveBtn');
+    btn.classList.add('loading');
+    btn.textContent = '保存中...';
+
+    setTimeout(() => {
+        btn.classList.remove('loading');
+        btn.textContent = '保存';
+        showToast('保存成功', 'success');
+    }, 1000);
+}
+
+function showToast(text, type) {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toastIcon');
+    const textEl = document.getElementById('toastText');
+    textEl.textContent = text;
+    icon.className = 'toast-icon ' + type;
+    icon.innerHTML = type === 'success' ? '&#10004;' : '&#10008;';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function onMonthChange() {
+    showToast('已切换到 ' + document.getElementById('monthPicker').value, 'success');
+    renderTable();
+}
+
+renderTable();
+</script>
+</body>
+</html>
